@@ -35,6 +35,17 @@ export default function Home() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const motionHandlerRef = useRef<((e: DeviceMotionEvent) => void) | null>(null);
 
+  // Safe runtime environment checks to avoid SSR "window is not defined"
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  const deviceMotionSupported =
+    typeof window !== "undefined" &&
+    // Using in-operator avoids direct property access when undefined
+    ("DeviceMotionEvent" in window) &&
+    // Narrow to ensure truthy constructor
+    Boolean((window as unknown as { DeviceMotionEvent?: unknown }).DeviceMotionEvent);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -284,8 +295,8 @@ Rotation: ${e.rotationRate?.alpha?.toFixed(2)}, ${e.rotationRate?.beta?.toFixed(
 
         {/* Debug Info */}
         <div className="text-xs text-gray-500 mb-4 p-2 bg-gray-50 rounded">
-          <div>Device: {/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ? '📱 Mobile' : '💻 Desktop'}</div>
-          <div>DeviceMotion: {window.DeviceMotionEvent ? '✅ Supported' : '❌ Not Supported'}</div>
+          <div>Device: {isMobile ? '📱 Mobile' : '💻 Desktop/SSR'}</div>
+          <div>DeviceMotion: {deviceMotionSupported ? '✅ Supported' : '❌ Not Supported'}</div>
           <div>Data Points: {sensorData.length}</div>
           <div>Recording: {recording ? '✅ Yes' : '❌ No'}</div>
         </div>
